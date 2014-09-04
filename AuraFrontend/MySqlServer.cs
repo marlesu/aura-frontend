@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
+using Timer = System.Timers.Timer;
 
 namespace AuraFrontend
 {
@@ -26,28 +28,65 @@ namespace AuraFrontend
 
 		Process StartMySql()
 		{
+			var p = new Process
+			{
+				StartInfo =
+				{
+					FileName = _mySqlDPath,
+					CreateNoWindow = true,
+					UseShellExecute = false,
+					WindowStyle = ProcessWindowStyle.Hidden,
+					WorkingDirectory = _mySqlDir
+				}
+			};
+
 			using (var t = new ChangingOutput("Starting MySql server . . ."))
 			{
-				var p = new Process
-				{
-					StartInfo =
-					{
-						FileName = _mySqlDPath,
-						CreateNoWindow = true,
-						UseShellExecute = false,
-						WindowStyle = ProcessWindowStyle.Hidden,
-						WorkingDirectory = _mySqlDir
-					}
-				};
-
 				var success = p.Start();
 
 				t.PrintResult(success);
 
 				if (!success)
 					p = null;
+			}
 
-				return p;
+			using (var _ = new ChangingOutput("Waiting for MySql to accept connections . . ."))
+			{
+				var i = 0;
+				var timer = new Timer(1000);
+
+				timer.Elapsed += (e, o) =>
+				{
+					_.PrintNumber(i++);
+				};
+
+				timer.Start();
+
+				while (!CheckMysqlPort())
+					Thread.Sleep(1000);
+
+				timer.Stop();
+
+				_.PrintResult(true);
+			}
+
+			return p;
+		}
+
+		private bool CheckMysqlPort()
+		{
+			try
+			{
+				using (var tcp = new TcpClient())
+				{
+					tcp.Connect("localhost", 3306);
+
+					return true;
+				}
+			}
+			catch (SocketException)
+			{
+				return false;
 			}
 		}
 
