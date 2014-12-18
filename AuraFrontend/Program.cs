@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging;
@@ -50,7 +51,11 @@ namespace AuraFrontend
 				Exit(true);
 			}
 
+			CheckForHpd();
+
 			var recompileRequired = new UpdateSource(AuraDir, GitClonePath).Update();
+
+			recompileRequired = true; // Hue for the hack.
 
 			if (recompileRequired)
 			{
@@ -95,13 +100,57 @@ namespace AuraFrontend
 			}
 		}
 
+		private static void CheckForHpd()
+		{
+			using (
+				var key =
+					Microsoft.Win32.Registry.LocalMachine.OpenSubKey(
+						@"SYSTEM\CurrentControlSet\Control\Session Manager\Environment"))
+			{
+				if (key == null || key.GetValueNames().All(n => n.ToLower() != "platform"))
+					return;
+
+				PrintWarning("Platform environmental variable exists. This may interfere with compilation.");
+
+				Console.Write("Would you like to attempt to autoremove this value? (y/n): ");
+
+				if (!Console.ReadLine().Trim().ToLower().StartsWith("y"))
+				{
+					Console.WriteLine("User selected to not remove value");
+					return;
+				}
+
+				using (var _ = new ChangingOutput("Deleting platform key"))
+				{
+					_.FinishLine();
+
+					var r = false;
+
+					try
+					{
+						using (var k2 = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Session Manager\Environment", true))
+						{
+							k2.DeleteValue("Platform", true);
+						}
+						r = true;
+					}
+					catch (Exception ex)
+					{
+						PrintError("Failed to delete registry key. Try running Frontend as an Administrator. Details: {0}", ex.Message);
+					}
+
+					_.PrintResult(r);
+				}
+			}
+		}
+
 		static void Exit(bool wait)
 		{
 			if (wait)
 			{
 				while (Console.KeyAvailable)
 					Console.ReadKey();
-				
+
 				Console.WriteLine();
 				Console.WriteLine();
 
@@ -129,7 +178,7 @@ namespace AuraFrontend
 						using (var t = new ChangingOutput("Terminating process {0} . . .", p.Id))
 						{
 							p.Kill();
-							var killed = p.WaitForExit(10*1000);
+							var killed = p.WaitForExit(10 * 1000);
 							t.PrintResult(killed);
 
 							if (!killed)

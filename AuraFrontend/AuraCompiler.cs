@@ -34,6 +34,8 @@ namespace AuraFrontend
 		{
 			using (var t = new ChangingOutput("Compiling target(s) {0} . . .", string.Join(", ", targets)))
 			{
+				t.FinishLine();
+
 				var logger = new ConsoleLogger(LoggerVerbosity.Quiet);
 
 				logger.SkipProjectStartedText = true;
