@@ -19,7 +19,7 @@ namespace AuraFrontend
 		private static readonly string AuraDir = Path.Combine(ExeDir, "aura");
 		private static readonly string SlnPath = Path.Combine(AuraDir, "Aura.sln");
 		private static readonly string MainSqlPath = Path.Combine(AuraDir, "sql/main.sql");
-		private static readonly string StartServersPath = Path.Combine(AuraDir, "start-server.bat");
+		private static readonly string StartServersPath = Path.Combine(AuraDir, "start-all.bat");
 
 		private static readonly string UniDir = Path.Combine(ExeDir, "uniserver");
 		private static readonly string MySqlDir = Path.Combine(UniDir, "core/mysql/bin");
