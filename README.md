@@ -10,7 +10,7 @@ Requirements
 
 Setup
 ------------------------------
-1. Download the latest version of the program from the [Releases](https://github.com/aura-project-lab/frontend/releases) section.
+1. Download the latest version of the program from the [Releases](/releases) section.
 2. Extract the zip into an empty directory of your choice.
 
 Usage
