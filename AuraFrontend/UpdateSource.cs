@@ -109,7 +109,12 @@ namespace AuraFrontend
 			{
 				_.FinishLine();
 
-				using (var t = new ChangingOutput("Fetching updates from GitHub . . ."))
+				// Update origin URL and re-initialize repo
+				var origin = repo.Network.Remotes["origin"];
+				if (origin.Url != _gitClonePath)
+					repo.Network.Remotes.Update(origin, r => r.Url = _gitClonePath);
+
+				using (var t = new ChangingOutput("Fetching updates from remote . . ."))
 				{
 					repo.Fetch("origin", new FetchOptions()
 					{
@@ -129,7 +134,7 @@ namespace AuraFrontend
 				{
 					using (var t = new ChangingOutput("Merging in updates . . ."))
 					{
-						result = repo.Merge(repo.Head.TrackedBranch, new Signature(Environment.UserName, "foo@bar.com", DateTime.Now),
+						result = repo.Merge(repo.Branches["origin/master"], new Signature(Environment.UserName, "foo@bar.com", DateTime.Now),
 							new MergeOptions
 							{
 								CommitOnSuccess = true,

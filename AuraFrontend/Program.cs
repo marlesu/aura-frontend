@@ -16,6 +16,7 @@ namespace AuraFrontend
 		private static readonly string ExeDir =
 			Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
+		private static readonly string GitUrlPath = Path.Combine(ExeDir, "git_url.txt");
 		private static readonly string AuraDir = Path.Combine(ExeDir, "aura");
 		private static readonly string SlnPath = Path.Combine(AuraDir, "Aura.sln");
 		private static readonly string MainSqlPath = Path.Combine(AuraDir, "sql", "main.sql");
@@ -53,10 +54,17 @@ namespace AuraFrontend
 
 			CheckForHpd();
 
+			if (!File.Exists(GitUrlPath))
+			{
+				PrintError("URL file 'git_url.txt' not found.");
+				Exit(true);
+			}
+
 			bool recompileRequired;
 			try
 			{
-				recompileRequired = new UpdateSource(AuraDir, GitClonePath).Update();
+				var gitClonePath = File.ReadAllText(GitUrlPath).Trim();
+				recompileRequired = new UpdateSource(AuraDir, gitClonePath).Update();
 			}
 			catch (LibGit2Sharp.LibGit2SharpException ex)
 			{
