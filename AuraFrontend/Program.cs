@@ -53,7 +53,16 @@ namespace AuraFrontend
 
 			CheckForHpd();
 
-			var recompileRequired = new UpdateSource(AuraDir, GitClonePath).Update();
+			bool recompileRequired;
+			try
+			{
+				recompileRequired = new UpdateSource(AuraDir, GitClonePath).Update();
+			}
+			catch (LibGit2Sharp.LibGit2SharpException ex)
+			{
+				PrintError("Failed to download or update Aura source, startup aborted (Error: {0})", ex.Message);
+				Exit(true);
+			}
 
 			recompileRequired = true; // Hue for the hack.
 

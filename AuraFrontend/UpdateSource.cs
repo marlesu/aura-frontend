@@ -45,14 +45,22 @@ namespace AuraFrontend
 
 			using (var t = new ChangingOutput("Repository not valid - redownloading Aura source . . ."))
 			{
-				Repository.Clone(_gitClonePath, _repoDir, new CloneOptions()
+				try
 				{
-					OnTransferProgress = (x) =>
+					Repository.Clone(_gitClonePath, _repoDir, new CloneOptions()
 					{
-						t.PrintProgress((double) x.ReceivedObjects/x.TotalObjects);
-						return true;
-					}
-				});
+						OnTransferProgress = (x) =>
+						{
+							t.PrintProgress((double)x.ReceivedObjects / x.TotalObjects);
+							return true;
+						}
+					});
+				}
+				catch
+				{
+					t.PrintResult(false);
+					throw;
+				}
 
 				t.PrintResult(true);
 
@@ -107,7 +115,7 @@ namespace AuraFrontend
 					{
 						OnTransferProgress = (x) =>
 						{
-							t.PrintProgress((double) x.ReceivedObjects/x.TotalObjects);
+							t.PrintProgress((double)x.ReceivedObjects / x.TotalObjects);
 							return true;
 						}
 					});
@@ -129,7 +137,7 @@ namespace AuraFrontend
 								MergeFileFavor = MergeFileFavor.Normal,
 								OnCheckoutProgress = (n, processed, total) =>
 								{
-									t.PrintProgress((double) processed/total);
+									t.PrintProgress((double)processed / total);
 								},
 							});
 
@@ -162,7 +170,7 @@ namespace AuraFrontend
 					Console.WriteLine("Rolling back merge...");
 					repo.Reset(currentCommit);
 					recompileNeeded = false;
-					_.PrintResult(false);					
+					_.PrintResult(false);
 				}
 
 				return recompileNeeded;
